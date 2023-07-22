@@ -42,7 +42,7 @@ class SSO extends BaseEngine
             case 'callback':
             {
                 try {
-                    $object = new CallbackObject(arg(), AnkioApi::getInstance()->secretKey);
+                    $object = new CallbackObject(arg(), AnkioApi::getInstance()->config->key);
                     $result = $this->callback($object);
                     if ($result === true) {
                         Response::location($object->redirect);
@@ -114,8 +114,8 @@ class SSO extends BaseEngine
      */
     function getLoginUrl(): string
     {
-        return AnkioApi::getInstance()->url . '?' . http_build_query([
-                'id' => AnkioApi::getInstance()->appId,
+        return AnkioApi::getInstance()->config->url . '?' . http_build_query([
+                'id' => AnkioApi::getInstance()->config->id,
                 'redirect' => Request::getNowAddress()
             ]);
     }

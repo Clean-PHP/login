@@ -34,8 +34,8 @@ class LoginManager
 
     public function __construct()
     {
-        $config = Config::getConfig('sso');
-        if (empty($config)) {
+        $config = Config::getConfig('notice');
+        if (!isset($config["sso"]) || !$config["sso"]) {
             $this->engine = new Password();
         } else {
             $this->engine = new SSO();

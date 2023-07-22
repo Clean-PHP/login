@@ -26,9 +26,9 @@ use cleanphp\cache\Cache;
 use cleanphp\engine\EngineManager;
 use cleanphp\file\File;
 use cleanphp\file\Log;
+use Exception;
 use library\captcha\Captcha;
-use library\encryption\EncryptionException;
-use library\encryption\RSAEncrypt;
+use library\login\RSAEncrypt;
 
 class Password extends BaseEngine
 {
@@ -85,17 +85,14 @@ class Password extends BaseEngine
             }
 
         }
-        (new Response())->render($result, 200, EngineManager::getEngine()->getContentType())->send();
+        (new Response())->render($result)->send();
     }
 
     function isLogin(): bool
     {
-
-        $token = Session::getInstance()->get('token');
-
+        $token = Session::getInstance()->get('token','');
         $token2 = Cache::init()->get('token');
-
-        if ($token !== $token2) {
+        if (strlen($token)!==40 || $token !== $token2) {
             $this->logout();
             return false;
         }
@@ -107,9 +104,9 @@ class Password extends BaseEngine
     {
         $data = Config::getConfig('login');
         $hash = md5($data["username"] . $data["password"]);
-        $timeout = time() + 3600 * 24;
-        $token = sha1($hash . md5($timeout));
+        $token = sha1($hash . rand_str(32));//加盐
         Session::getInstance()->set('token', $token);
+        Cache::init()->set('token', $token);
         EventManager::trigger("__login_success__");
     }
 
@@ -130,7 +127,7 @@ class Password extends BaseEngine
         $rsa = new RSAEncrypt();
         try {
             $rsa->initRSAPath($private, $public);
-        } catch (EncryptionException $e) {
+        } catch (Exception $e) {
             App::$debug && Log::record('Encrypt', $e->getMessage(), Log::TYPE_ERROR);
             return false;
         }
