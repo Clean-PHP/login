@@ -93,7 +93,6 @@ class Password extends BaseEngine
         $token = Session::getInstance()->get('token','');
         $token2 = Cache::init()->get('token');
         if (strlen($token)!==40 || $token !== $token2) {
-            $this->logout();
             return false;
         }
 

@@ -74,7 +74,6 @@ class SSO extends BaseEngine
         if($data['code'] === 200){
             return true;
         }
-        $this->logout();
         return false;
     }
 
