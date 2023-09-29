@@ -14,7 +14,7 @@
 
 namespace library\login;
 
-use app\controller\api\App;
+use cleanphp\App;
 use cleanphp\file\Log;
 
 class SignUtils
@@ -36,11 +36,11 @@ class SignUtils
         ksort($args);
         $String = self::formatBizQueryParaMap($args);
         $String = $String . "&key=" . $secretKey;
-        \cleanphp\App::$debug && Log::record("SignUtils","$String",Log::TYPE_WARNING);
+        App::$debug && Log::record("SignUtils","$String",Log::TYPE_WARNING);
         return strtoupper(hash('sha256', $String));
     }
 
-    private static function formatBizQueryParaMap($paraMap)
+    private static function formatBizQueryParaMap($paraMap): string
     {
         $buff = "";
         ksort($paraMap);
@@ -57,8 +57,8 @@ class SignUtils
     public static function sign(array $array, $key): array
     {
 
-        \cleanphp\App::$debug && Log::record("SignUtils",print_r($array,true));
-        \cleanphp\App::$debug && Log::record("SignUtils","Key: $key");
+        App::$debug && Log::record("SignUtils",print_r($array,true));
+        App::$debug && Log::record("SignUtils","Key: $key");
         $array['sign'] = self::getSign($array, $key);
 
         return $array;

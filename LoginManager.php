@@ -52,7 +52,7 @@ class LoginManager
         $this->engine->route($a);
     }
 
-    public function logout()
+    public function logout(): void
     {
         $this->engine->logout();
     }

@@ -5,11 +5,14 @@
 
 namespace library\login\engine;
 
+use cleanphp\App;
 use cleanphp\base\EventManager;
 use cleanphp\base\Json;
 use cleanphp\base\Request;
 use cleanphp\base\Response;
 use cleanphp\base\Session;
+use cleanphp\base\Variables;
+use cleanphp\cache\Cache;
 use cleanphp\engine\EngineManager;
 use cleanphp\file\Log;
 use library\login\AnkioApi;
@@ -19,23 +22,22 @@ use library\verity\VerityException;
 
 class SSO extends BaseEngine
 {
+
+    private ?Cache $cache;
+
+    public function __construct()
+    {
+        $this->cache =  Cache::init(0,Variables::getCachePath("tokens"));
+    }
+
     function route($action): void
     {
         $result = EngineManager::getEngine()->render(401, '未登录');
 
         switch (strtolower($action)) {
-            case 'islogin':
-            {
-                if ($this->isLogin()) {
-                    $result = EngineManager::getEngine()->render(401, '未登录');
-                } else {
-                    $result = EngineManager::getEngine()->render(200, '已登录');
-                }
-                break;
-            }
             case 'logout':
             {
-                $this->logout();
+                $this->cache->del(arg('token','empty'));
                 $result = EngineManager::getEngine()->render(200, '成功退出');
                 break;
             }
@@ -54,25 +56,25 @@ class SSO extends BaseEngine
                 break;
             }
         }
-        (new Response())->render($result, 200, EngineManager::getEngine()->getContentType())->send();
+        (new Response())->render($result)->send();
     }
 
     function isLogin(): bool
     {
-        $last = Session::getInstance()->get('check', 0);
-        $token = Session::getInstance()->get('token');
 
-        if (empty($token)) {
-            $this->logout();
+        $token = Session::getInstance()->get('__token');
+        $timeout = Session::getInstance()->get("__timeout");
+        if (empty($token)||empty($timeout)||!$this->cache->get($token)) {
+            $this->cache->del($token);
             return false;
         }
-        if (time() - $last < 600) { //10分钟检查一次避免过高的请求
-            return true;
-        }
-        Session::getInstance()->set('check', time());
-        $data = $this->request('api/login/islogin', ['token' => $token]);
-        if($data['code'] === 200){
-            return true;
+        //时间不足6小时，续期
+        if($timeout < time() + 3600*6){
+            $data = $this->request('api/login/islogin', ['token' => $token]);
+            if($data['code'] === 200){
+                Session::getInstance()->set("__timeout",$data['data']);
+                return true;
+            }
         }
         return false;
     }
@@ -84,22 +86,24 @@ class SSO extends BaseEngine
 
     function logout(): void
     {
-        $token = Session::getInstance()->get("token");
+        $token = Session::getInstance()->get("__token");
         if(!empty($token)){
+            $this->cache->del($token);
             $this->request('api/login/logout', ['token' => $token]);
-            Session::getInstance()->destroy();
         }
-
+        Session::getInstance()->destroy();
     }
 
     private function callback(CallbackObject $object)
     {
-        $result = $this->request('api/login/replace', ['code' => $object->code]);
-        Log::record('SSO', Json::encode($result));
+        $result = $this->request('api/login/replace', ['refresh_token' => $object->code]);
+        App::$debug && Log::record('SSO', Json::encode($result));
         if (isset($result['code']) && $result['code'] === 200) {
-            Session::getInstance()->set('token', $result['data']['token']);
+            Session::getInstance()->set('__token', $result['data']['token']);
+            Session::getInstance()->set('__timeout', $result['data']['timeout']);
             $result['data']['username'] = $result['data']['nickname'];
-            Session::getInstance()->set("user",$result['data']);
+            Session::getInstance()->set("__user",$result['data']);
+            $this->cache->set($result['data']['token'],true);
             EventManager::trigger("__login_success__", $result['data']);
             return true;
         } else {
@@ -113,7 +117,7 @@ class SSO extends BaseEngine
      */
     function getLoginUrl(): string
     {
-        return AnkioApi::getInstance()->config->url . '?' . http_build_query([
+        return AnkioApi::getInstance()->config->url . '#!login?' . http_build_query([
                 'id' => AnkioApi::getInstance()->config->id,
                 'redirect' => Request::getNowAddress()
             ]);
@@ -122,6 +126,6 @@ class SSO extends BaseEngine
 
     function getUser(): array
     {
-        return  Session::getInstance()->get("user");
+        return  Session::getInstance()->get("__user");
     }
 }

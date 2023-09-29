@@ -67,14 +67,14 @@ class AnkioApi
      */
     static function sendMail(string $mailto, string $subject, string $content, string $fromname): mixed
     {
-        $data = self::getInstance()->request("api/mail/send", ["mailto" => $mailto, "subject" => $subject, "fromname" => $fromname, "content" => base64_encode($content)]);
+        $data = self::getInstance()->request("api/mail/send", [
+            "mailto" => $mailto,
+            "subject" => $subject,
+            "fromname" => $fromname,
+            "content" => base64_encode($content)
+        ]);
         if ($data["code"] == 200) return true;
         return $data["msg"];
     }
 
-    static function getClientInfo(string $useragent,string $ip){
-        $data = self::getInstance()->request("api/client/query", ["ua" => $useragent, "ip" => $ip]);
-        if ($data["code"] == 200) return true;
-        return $data["data"];
-    }
 }
