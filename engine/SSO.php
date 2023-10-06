@@ -27,7 +27,7 @@ class SSO extends BaseEngine
 
     public function __construct()
     {
-        $this->cache =  Cache::init(0,Variables::getCachePath("tokens"));
+        $this->cache =  Cache::init(0,Variables::getCachePath("tokens",DS));
     }
 
     function route($action): void
@@ -61,23 +61,32 @@ class SSO extends BaseEngine
 
     function isLogin(): bool
     {
-
         $token = Session::getInstance()->get('__token');
         $timeout = Session::getInstance()->get("__timeout");
-        if (empty($token)||empty($timeout)||!$this->cache->get($token)) {
-            $this->cache->del($token);
+
+        // 检查必要的数据是否存在，如果不存在就返回 false
+        if (empty($token) || empty($timeout) || !$this->cache->get($token)) {
+            if ($token) {
+                $this->cache->del($token);
+            }
             return false;
         }
-        //时间不足6小时，续期
-        if($timeout < time() + 3600*6){
+
+        // 检查是否需要续期
+        if ($timeout < time() + 3600 * 6) {
             $data = $this->request('api/login/islogin', ['token' => $token]);
-            if($data['code'] === 200){
-                Session::getInstance()->set("__timeout",$data['data']);
+            if ($data['code'] === 200) {
+                // 更新 __timeout 数据
+                Session::getInstance()->set("__timeout", $data['data']);
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
+
+        return true;
     }
+
 
     private function request($url, $data = [])
     {
@@ -119,7 +128,7 @@ class SSO extends BaseEngine
     {
         return AnkioApi::getInstance()->config->url . '#!login?' . http_build_query([
                 'id' => AnkioApi::getInstance()->config->id,
-                'redirect' => Request::getNowAddress()
+                'redirect' => $_SERVER['HTTP_REFERER']??"/"
             ]);
     }
 

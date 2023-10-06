@@ -184,8 +184,8 @@ class Password extends BaseEngine
 
     function getLoginUrl(): string
     {
-        $url = Request::getNowAddress();
-        return url('index', 'main', 'login', ['redirect' => $url]);
+        $url =   $_SERVER['HTTP_REFERER']??"/";
+        return "#!login?".http_build_query(['redirect' => $url]);
     }
 
     function getUser(): array

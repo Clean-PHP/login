@@ -62,7 +62,7 @@ class LoginManager
         return $this->engine->getLoginUrl();
     }
 
-    public function getUser(): array
+    public function getUser(): ?array
     {
         return $this->engine->getUser();
     }
