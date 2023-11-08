@@ -124,7 +124,7 @@ class SSO extends BaseEngine
      */
     function getLoginUrl(): string
     {
-        return AnkioApi::getInstance()->config->url . '#!login?' . http_build_query([
+        return AnkioApi::getInstance()->config->url . '@login?' . http_build_query([
                 'id' => AnkioApi::getInstance()->config->id,
                 'redirect' => $_SERVER['HTTP_REFERER'] ?? Request::getAddress()
             ]);
