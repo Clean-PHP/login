@@ -35,6 +35,16 @@ class SSO extends BaseEngine
         $result = EngineManager::getEngine()->render(401, '未登录');
 
         switch (strtolower($action)) {
+            case 'islogin':
+            {
+
+                if (!$this->isLogin()) {
+                    $result = EngineManager::getEngine()->render(401, '未登录');
+                } else {
+                    $result = EngineManager::getEngine()->render(200, '已登录');
+                }
+                break;
+            }
             case 'logout':
             {
                 $this->cache->del(arg('token', 'empty'));

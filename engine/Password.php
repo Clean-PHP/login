@@ -152,8 +152,6 @@ class Password extends BaseEngine
         if (empty($old) || empty($new)) return true;
         $data = Config::getConfig('login');
         if (password_verify($data["username"] . $old, $data["password"])) {
-            Cache::init()->del("token");
-            Session::getInstance()->destroy();
             $data["password"] = password_hash($username . $new,PASSWORD_DEFAULT);
             $data["username"] = $username;
             Config::setConfig("login", $data);
