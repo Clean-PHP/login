@@ -40,6 +40,7 @@ class Password extends BaseEngine
         switch (strtolower($action)) {
             case 'islogin':
             {
+
                 if (!$this->isLogin()) {
                     $result = EngineManager::getEngine()->render(401, '未登录');
                 } else {
@@ -99,7 +100,7 @@ class Password extends BaseEngine
         return true;
     }
 
-    function setLogin()
+    function setLogin(): void
     {
         $data = Config::getConfig('login');
         $hash = md5($data["username"] . $data["password"]);
@@ -138,7 +139,6 @@ class Password extends BaseEngine
         $data = Config::getConfig('login');
         if (password_verify($data["username"] . $passwd, $data["password"]) && $user === $data["username"]) {
             $this->setLogin();
-
             return true;
         }
         return false;
