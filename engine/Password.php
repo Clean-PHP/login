@@ -117,7 +117,8 @@ class Password extends BaseEngine
 
     function login(): bool
     {
-        if (!(new Captcha())->verify('login', arg("code"))) {
+
+        if (!(new Captcha())->verify('login', arg("code",-9999))) {
             App::$debug && Log::record('Password',"验证码验证失败", Log::TYPE_ERROR);
             return false;
         }
