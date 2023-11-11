@@ -77,4 +77,11 @@ class AnkioApi
         return $data["msg"];
     }
 
+    static function ai($content){
+        $data = self::getInstance()->request("api/ai/msg", [
+            "content" => base64_encode($content)
+        ]);
+        return $data["data"];
+    }
+
 }
