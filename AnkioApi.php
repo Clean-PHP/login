@@ -49,7 +49,7 @@ class AnkioApi
             ];
             $data['t'] = time();
             $data['appid'] = $this->config->id;
-            $response = HttpClient::init( $this->config->url)->setHeaders($headers)->post(SignUtils::sign($data,  $this->config->key), 'form')->send($url);
+            $response = HttpClient::init($this->config->url)->setHeaders($headers)->post(SignUtils::sign($data, $this->config->key), 'form')->send($url);
             return Json::decode($response->getBody(), true);
         } catch (HttpException $e) {
             Log::record("API", $e->getMessage(), Log::TYPE_ERROR);
@@ -77,11 +77,12 @@ class AnkioApi
         return $data["msg"];
     }
 
-    static function ai($content){
+    static function ai($content)
+    {
         $data = self::getInstance()->request("api/ai/msg", [
             "content" => base64_encode($content)
         ]);
-        return $data["data"];
+        return [$data["data"], $data["code"]];
     }
 
 }
